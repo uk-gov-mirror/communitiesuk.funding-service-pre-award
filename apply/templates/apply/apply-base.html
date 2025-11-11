@@ -115,7 +115,7 @@
       "text": _("Contact us")
     }
   ] %}
-  {% if not (fund and fund.short_name == 'LAHF') %}
+  {% if has_privacy_notice %}
     {% set _ = footer_items.insert(0, {
       "href": privacyUrl,
       "text": _("Privacy")

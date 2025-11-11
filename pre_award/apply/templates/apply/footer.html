@@ -1,7 +1,7 @@
 {% from "govuk_frontend_jinja/components/footer/macro.html" import govukFooter -%}
 
 {% set footer_items = [] -%}
-{% if privacy_url -%}
+{% if has_privacy_notice -%}
     {% set _ = footer_items.append({'href': privacy_url, 'text': gettext('Privacy')}) -%}
 {% endif -%}
 {% set _ = footer_items.extend([

@@ -387,6 +387,15 @@ def create_app() -> Flask:  # noqa: C901
 
         return gettext("Access Funding")
 
+    def _privacy_for_round(round_obj):
+        """Return (has_privacy, privacy_url_str) for a round object."""
+        if not round_obj:
+            return False, None
+        privacy_val = getattr(round_obj, "privacy_notice", None)
+        if isinstance(privacy_val, str) and privacy_val.strip():
+            return True, privacy_val.strip()
+        return False, None
+
     @flask_app.context_processor
     def utility_processor():
         return {"get_service_title": _get_service_title}
@@ -409,6 +418,7 @@ def create_app() -> Flask:  # noqa: C901
         try:
             fund, round = find_fund_and_round_in_request()
             if fund and round:
+                has_privacy, _ = _privacy_for_round(round)
                 return dict(
                     accessibility_statement_url=url_for(
                         "content_routes.accessibility_statement",
@@ -425,7 +435,7 @@ def create_app() -> Flask:  # noqa: C901
                         fund=fund.short_name,
                         round=round.short_name,
                     )
-                    if round.short_name != "LAHFtu"
+                    if has_privacy
                     else "",
                     feedback_url=url_for(
                         "content_routes.feedback",
@@ -462,6 +472,16 @@ def create_app() -> Flask:  # noqa: C901
             )
 
         return dict(is_uncompeted_flow=_is_uncompeted_flow)
+
+    @flask_app.context_processor
+    def inject_privacy_flag():
+        try:
+            rnd = find_round_in_request()
+            has_privacy, privacy_url = _privacy_for_round(rnd)
+            return {"has_privacy_notice": has_privacy, "privacy_url": privacy_url}
+        except Exception as e:
+            current_app.logger.debug("inject_privacy_flag skipped: %s", e)
+            return {"has_privacy_notice": False, "privacy_url": None}
 
     @flask_app.after_request
     def after_request(response):
